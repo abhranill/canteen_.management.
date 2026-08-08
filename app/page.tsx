@@ -1,69 +1,204 @@
-import Image from "next/image";
+"use client";
+
+import {
+  Search,
+  ClipboardList,
+  IndianRupee,
+  Utensils,
+  Clock3,
+  Sandwich,
+  Coffee,
+  Soup,
+} from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="min-h-screen bg-[var(--background)] p-4 text-[var(--foreground)] sm:p-6 lg:p-8">
+      {/* Welcome */}
+      <section className="mb-8">
+        <p className="mb-1 text-sm font-medium text-orange-500">
+          TODAY
+        </p>
+
+        <h1 className="text-2xl font-bold sm:text-3xl">
+          Good morning, Admin
+        </h1>
+
+        <p className="mt-2 text-[var(--muted)]">
+          Here's what's happening in your canteen today.
+        </p>
+      </section>
+
+      {/* Search */}
+      <div className="mb-6 flex max-w-xl items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+        <Search
+          size={19}
+          className="text-[var(--muted)]"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+
+        <input
+          type="text"
+          placeholder="Search menu items..."
+          className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+        />
+      </div>
+
+      {/* Stats */}
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Today's Orders"
+          value="24"
+          change="+12%"
+          icon={<ClipboardList size={21} />}
+        />
+
+        <StatCard
+          title="Today's Sales"
+          value="₹4,820"
+          change="+8.5%"
+          icon={<IndianRupee size={21} />}
+        />
+
+        <StatCard
+          title="Menu Items"
+          value="32"
+          change="4 categories"
+          icon={<Utensils size={21} />}
+        />
+
+        <StatCard
+          title="Pending Orders"
+          value="7"
+          change="Needs attention"
+          icon={<Clock3 size={21} />}
+        />
+      </section>
+
+      {/* Popular Items */}
+      <section className="mt-8">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold">
+              Popular Today
+            </h2>
+
+            <p className="text-sm text-[var(--muted)]">
+              Your most ordered food items
+            </p>
+          </div>
+
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/menu"
+            className="text-sm font-semibold text-orange-500 hover:text-orange-600"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+            View menu →
           </a>
         </div>
-      </main>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <FoodCard
+            icon={<Sandwich size={54} strokeWidth={1.5} />}
+            name="Classic Burger"
+            category="Fast Food"
+            price="₹60"
+            orders="18 orders"
+          />
+
+          <FoodCard
+            icon={<Sandwich size={54} strokeWidth={1.5} />}
+            name="Chicken Roll"
+            category="Rolls"
+            price="₹70"
+            orders="15 orders"
+          />
+
+          <FoodCard
+            icon={<Coffee size={54} strokeWidth={1.5} />}
+            name="Masala Tea"
+            category="Beverages"
+            price="₹15"
+            orders="32 orders"
+          />
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function StatCard({
+  title,
+  value,
+  change,
+  icon,
+}: {
+  title: string;
+  value: string;
+  change: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:-translate-y-0.5 hover:shadow-lg">
+      <div className="mb-5 flex items-center justify-between">
+        <p className="text-sm text-[var(--muted)]">
+          {title}
+        </p>
+
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500 dark:bg-orange-950/40">
+          {icon}
+        </div>
+      </div>
+
+      <p className="text-2xl font-bold">
+        {value}
+      </p>
+
+      <p className="mt-2 text-xs text-emerald-500">
+        {change}
+      </p>
+    </div>
+  );
+}
+
+function FoodCard({
+  icon,
+  name,
+  category,
+  price,
+  orders,
+}: {
+  icon: React.ReactNode;
+  name: string;
+  category: string;
+  price: string;
+  orders: string;
+}) {
+  return (
+    <div className="group overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] transition hover:-translate-y-1 hover:shadow-xl">
+      <div className="flex h-32 items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 text-orange-500 dark:from-orange-950/40 dark:to-amber-950/30">
+        {icon}
+      </div>
+
+      <div className="p-5">
+        <div className="mb-2 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-bold">
+              {name}
+            </h3>
+
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              {category}
+            </p>
+          </div>
+
+          <span className="font-bold text-orange-500">
+            {price}
+          </span>
+        </div>
+
+        <p className="text-xs text-[var(--muted)]">
+          {orders}
+        </p>
+      </div>
     </div>
   );
 }
