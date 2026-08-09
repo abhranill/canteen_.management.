@@ -3,83 +3,26 @@
 import {
   Search,
   ShoppingBag,
-  Clock3,
+  Clock,
   CheckCircle2,
-  CircleX,
   ChefHat,
-  MoreHorizontal,
+  PackageCheck,
+  XCircle,
+  Phone,
+  User,
+  X,
 } from "lucide-react";
-import { useState } from "react";
 
-type OrderStatus =
-  | "Pending"
-  | "Preparing"
-  | "Ready"
-  | "Completed"
-  | "Cancelled";
+import { useEffect, useState } from "react";
 
-type Order = {
-  id: string;
-  customer: string;
-  items: string;
-  amount: number;
-  time: string;
-  status: OrderStatus;
-};
+import {
+  Order,
+  OrderStatus,
+  getOrders,
+  saveOrders,
+} from "@/lib/store";
 
-const orders: Order[] = [
-  {
-    id: "#ORD-1024",
-    customer: "Rahul Sharma",
-    items: "Classic Burger × 2",
-    amount: 120,
-    time: "10:42 AM",
-    status: "Completed",
-  },
-  {
-    id: "#ORD-1023",
-    customer: "Priya Das",
-    items: "Chicken Roll × 1, Tea × 1",
-    amount: 85,
-    time: "10:35 AM",
-    status: "Ready",
-  },
-  {
-    id: "#ORD-1022",
-    customer: "Arjun Roy",
-    items: "Veg Thali × 1",
-    amount: 90,
-    time: "10:28 AM",
-    status: "Preparing",
-  },
-  {
-    id: "#ORD-1021",
-    customer: "Sneha Paul",
-    items: "Cold Coffee × 2",
-    amount: 100,
-    time: "10:20 AM",
-    status: "Pending",
-  },
-  {
-    id: "#ORD-1020",
-    customer: "Amit Ghosh",
-    items: "Classic Burger × 1",
-    amount: 60,
-    time: "10:12 AM",
-    status: "Completed",
-  },
-  {
-    id: "#ORD-1019",
-    customer: "Riya Sen",
-    items: "Fresh Salad × 1",
-    amount: 50,
-    time: "10:05 AM",
-    status: "Cancelled",
-  },
-];
-
-const filters = [
-  "All",
+const statuses: OrderStatus[] = [
   "Pending",
   "Preparing",
   "Ready",
@@ -88,21 +31,84 @@ const filters = [
 ];
 
 export default function OrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [selectedStatus, setSelectedStatus] =
+    useState("All Orders");
 
+  const [selectedOrder, setSelectedOrder] =
+    useState<Order | null>(null);
+
+  /*
+   * Load orders
+   */
+  useEffect(() => {
+    setOrders(getOrders());
+  }, []);
+
+  /*
+   * Filter orders
+   */
   const filteredOrders = orders.filter((order) => {
+    const searchValue = search.toLowerCase();
+
     const matchesSearch =
-      order.id.toLowerCase().includes(search.toLowerCase()) ||
-      order.customer.toLowerCase().includes(search.toLowerCase()) ||
-      order.items.toLowerCase().includes(search.toLowerCase());
+      order.id.toLowerCase().includes(searchValue) ||
+      order.customer.toLowerCase().includes(searchValue) ||
+      order.phone.includes(searchValue);
 
-    const matchesFilter =
-      activeFilter === "All" ||
-      order.status === activeFilter;
+    const matchesStatus =
+      selectedStatus === "All Orders" ||
+      order.status === selectedStatus;
 
-    return matchesSearch && matchesFilter;
+    return matchesSearch && matchesStatus;
   });
+
+  /*
+   * Update order status
+   */
+  const updateOrderStatus = (
+    orderId: string,
+    status: OrderStatus
+  ) => {
+    const updatedOrders = orders.map((order) =>
+      order.id === orderId
+        ? {
+            ...order,
+            status,
+          }
+        : order
+    );
+
+    setOrders(updatedOrders);
+    saveOrders(updatedOrders);
+
+    if (selectedOrder?.id === orderId) {
+      setSelectedOrder({
+        ...selectedOrder,
+        status,
+      });
+    }
+  };
+
+  /*
+   * Status counts
+   */
+  const pendingCount = orders.filter(
+    (order) => order.status === "Pending"
+  ).length;
+
+  const preparingCount = orders.filter(
+    (order) => order.status === "Preparing"
+  ).length;
+
+  const readyCount = orders.filter(
+    (order) => order.status === "Ready"
+  ).length;
+
+  const completedCount = orders.filter(
+    (order) => order.status === "Completed"
+  ).length;
 
   return (
     <main className="min-h-screen bg-[var(--background)] p-4 text-[var(--foreground)] sm:p-6 lg:p-8">
@@ -119,21 +125,45 @@ export default function OrdersPage() {
             </h1>
 
             <p className="mt-2 text-sm text-[var(--muted)]">
-              Track and manage today's canteen orders.
+              Track and manage your canteen orders.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
-            <ShoppingBag
-              size={18}
-              className="text-orange-500"
-            />
-
-            <span className="text-sm font-semibold">
-              {orders.length} Total Orders
-            </span>
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500 text-white">
+            <ShoppingBag size={21} />
           </div>
         </div>
+      </section>
+
+      {/* Stats */}
+      <section className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <OrderStat
+          title="Pending"
+          value={pendingCount}
+          icon={<Clock size={19} />}
+          color="orange"
+        />
+
+        <OrderStat
+          title="Preparing"
+          value={preparingCount}
+          icon={<ChefHat size={19} />}
+          color="blue"
+        />
+
+        <OrderStat
+          title="Ready"
+          value={readyCount}
+          icon={<PackageCheck size={19} />}
+          color="emerald"
+        />
+
+        <OrderStat
+          title="Completed"
+          value={completedCount}
+          icon={<CheckCircle2 size={19} />}
+          color="purple"
+        />
       </section>
 
       {/* Search */}
@@ -146,95 +176,61 @@ export default function OrdersPage() {
         <input
           type="text"
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search orders, customers or items..."
+          onChange={(event) =>
+            setSearch(event.target.value)
+          }
+          placeholder="Search order, customer or phone..."
           className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
         />
       </div>
 
       {/* Filters */}
       <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-        {filters.map((filter) => {
-          const active = activeFilter === filter;
+        {["All Orders", ...statuses].map(
+          (status) => {
+            const active =
+              selectedStatus === status;
 
-          return (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
-                active
-                  ? "bg-orange-500 text-white shadow-md shadow-orange-500/20"
-                  : "border border-[var(--border)] bg-[var(--card)] text-[var(--muted)] hover:text-[var(--foreground)]"
-              }`}
-            >
-              {filter}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={status}
+                onClick={() =>
+                  setSelectedStatus(status)
+                }
+                className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+                  active
+                    ? "bg-orange-500 text-white shadow-md shadow-orange-500/20"
+                    : "border border-[var(--border)] bg-[var(--card)] text-[var(--muted)] hover:text-[var(--foreground)]"
+                }`}
+              >
+                {status}
+              </button>
+            );
+          }
+        )}
       </div>
 
-      {/* Desktop Table */}
-      <div className="hidden overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] md:block">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px]">
-            <thead>
-              <tr className="border-b border-[var(--border)] text-left">
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                  Order
-                </th>
-
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                  Customer
-                </th>
-
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                  Items
-                </th>
-
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                  Amount
-                </th>
-
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                  Time
-                </th>
-
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                  Status
-                </th>
-
-                <th className="px-6 py-4" />
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredOrders.map((order) => (
-                <OrderRow
-                  key={order.id}
-                  order={order}
-                />
-              ))}
-            </tbody>
-          </table>
+      {/* Orders */}
+      {filteredOrders.length > 0 ? (
+        <div className="grid gap-4">
+          {filteredOrders.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              onView={() =>
+                setSelectedOrder(order)
+              }
+              onStatusChange={
+                updateOrderStatus
+              }
+            />
+          ))}
         </div>
-      </div>
-
-      {/* Mobile Cards */}
-      <div className="space-y-4 md:hidden">
-        {filteredOrders.map((order) => (
-          <MobileOrderCard
-            key={order.id}
-            order={order}
-          />
-        ))}
-      </div>
-
-      {/* Empty State */}
-      {filteredOrders.length === 0 && (
-        <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)]">
+      ) : (
+        <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)]">
           <ShoppingBag
-            size={40}
-            className="mb-3 text-[var(--muted)]"
+            size={42}
+            className="mb-4 text-[var(--muted)]"
           />
 
           <h2 className="font-semibold">
@@ -242,160 +238,377 @@ export default function OrdersPage() {
           </h2>
 
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Try changing your search or filter.
+            Orders placed from the menu will appear
+            here.
           </p>
         </div>
+      )}
+
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <OrderDetails
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onStatusChange={updateOrderStatus}
+        />
       )}
     </main>
   );
 }
 
-function OrderRow({
+/*
+ * Order Card
+ */
+function OrderCard({
   order,
+  onView,
+  onStatusChange,
 }: {
   order: Order;
+  onView: () => void;
+  onStatusChange: (
+    orderId: string,
+    status: OrderStatus
+  ) => void;
 }) {
   return (
-    <tr className="border-b border-[var(--border)] last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/40">
-      <td className="px-6 py-5">
-        <p className="font-semibold">
-          {order.id}
-        </p>
-      </td>
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:shadow-lg">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        {/* Customer */}
+        <div className="flex items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-500 dark:bg-orange-950/40">
+            <ShoppingBag size={20} />
+          </div>
 
-      <td className="px-6 py-5">
-        <p className="font-medium">
-          {order.customer}
-        </p>
-      </td>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-bold">
+                {order.id}
+              </h3>
 
-      <td className="max-w-xs px-6 py-5">
-        <p className="truncate text-sm text-[var(--muted)]">
-          {order.items}
-        </p>
-      </td>
+              <StatusBadge status={order.status} />
+            </div>
 
-      <td className="px-6 py-5">
-        <p className="font-bold">
-          ₹{order.amount}
-        </p>
-      </td>
+            <p className="mt-1 font-medium">
+              {order.customer}
+            </p>
 
-      <td className="px-6 py-5">
-        <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
-          <Clock3 size={15} />
-          {order.time}
+            <div className="mt-1 flex flex-wrap gap-3 text-xs text-[var(--muted)]">
+              <span className="flex items-center gap-1">
+                <Phone size={13} />
+                {order.phone}
+              </span>
+
+              <span className="flex items-center gap-1">
+                <Clock size={13} />
+                {order.time}
+              </span>
+            </div>
+          </div>
         </div>
-      </td>
 
-      <td className="px-6 py-5">
-        <StatusBadge status={order.status} />
-      </td>
-
-      <td className="px-6 py-5">
-        <button
-          className="rounded-lg p-2 text-[var(--muted)] hover:bg-slate-100 hover:text-[var(--foreground)] dark:hover:bg-slate-800"
-          aria-label="Order options"
-        >
-          <MoreHorizontal size={19} />
-        </button>
-      </td>
-    </tr>
-  );
-}
-
-function MobileOrderCard({
-  order,
-}: {
-  order: Order;
-}) {
-  return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
-      <div className="mb-4 flex items-start justify-between">
-        <div>
-          <p className="font-bold">
-            {order.id}
+        {/* Items */}
+        <div className="lg:max-w-md lg:flex-1">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Items
           </p>
 
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            {order.customer}
-          </p>
+          <div className="flex flex-wrap gap-2">
+            {order.items.map((item) => (
+              <span
+                key={item.id}
+                className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium dark:bg-slate-800"
+              >
+                {item.name} × {item.quantity}
+              </span>
+            ))}
+          </div>
         </div>
 
-        <StatusBadge status={order.status} />
-      </div>
+        {/* Total + Actions */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:flex-col lg:items-end">
+          <div className="text-left sm:text-right">
+            <p className="text-xs text-[var(--muted)]">
+              Total
+            </p>
 
-      <div className="mb-4 flex items-start gap-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
-        <ChefHat
-          size={18}
-          className="mt-0.5 shrink-0 text-orange-500"
-        />
+            <p className="text-xl font-bold text-orange-500">
+              ₹{order.total}
+            </p>
+          </div>
 
-        <p className="text-sm text-[var(--muted)]">
-          {order.items}
-        </p>
-      </div>
+          <div className="flex gap-2">
+            {order.status !== "Completed" &&
+              order.status !== "Cancelled" && (
+                <button
+                  onClick={() =>
+                    moveToNextStatus(
+                      order,
+                      onStatusChange
+                    )
+                  }
+                  className="rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-semibold text-white hover:bg-orange-600"
+                >
+                  Next Status
+                </button>
+              )}
 
-      <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
-        <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
-          <Clock3 size={15} />
-          {order.time}
+            <button
+              onClick={onView}
+              className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-xs font-semibold hover:border-orange-500 hover:text-orange-500"
+            >
+              View
+            </button>
+          </div>
         </div>
-
-        <p className="font-bold text-orange-500">
-          ₹{order.amount}
-        </p>
       </div>
     </div>
   );
 }
 
+/*
+ * Status Badge
+ */
 function StatusBadge({
   status,
 }: {
   status: OrderStatus;
 }) {
-  const config = {
-    Pending: {
-      className:
-        "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400",
-      icon: Clock3,
-    },
-
-    Preparing: {
-      className:
-        "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400",
-      icon: ChefHat,
-    },
-
-    Ready: {
-      className:
-        "bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400",
-      icon: ShoppingBag,
-    },
-
-    Completed: {
-      className:
-        "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
-      icon: CheckCircle2,
-    },
-
-    Cancelled: {
-      className:
-        "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",
-      icon: CircleX,
-    },
+  const styles: Record<
+    OrderStatus,
+    string
+  > = {
+    Pending:
+      "bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400",
+    Preparing:
+      "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400",
+    Ready:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
+    Completed:
+      "bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400",
+    Cancelled:
+      "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",
   };
-
-  const current = config[status];
-  const Icon = current.icon;
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${current.className}`}
+      className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${styles[status]}`}
     >
-      <Icon size={13} />
       {status}
     </span>
+  );
+}
+
+/*
+ * Order Details
+ */
+function OrderDetails({
+  order,
+  onClose,
+  onStatusChange,
+}: {
+  order: Order;
+  onClose: () => void;
+  onStatusChange: (
+    orderId: string,
+    status: OrderStatus
+  ) => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[var(--border)] p-5">
+          <div>
+            <p className="text-xs font-medium text-orange-500">
+              ORDER DETAILS
+            </p>
+
+            <h2 className="mt-1 text-lg font-bold">
+              {order.id}
+            </h2>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-[var(--muted)] hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <X size={19} />
+          </button>
+        </div>
+
+        <div className="space-y-6 p-5">
+          {/* Customer */}
+          <div className="rounded-xl border border-[var(--border)] p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <User
+                size={17}
+                className="text-orange-500"
+              />
+
+              <h3 className="font-semibold">
+                Customer
+              </h3>
+            </div>
+
+            <p className="font-medium">
+              {order.customer}
+            </p>
+
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              {order.phone}
+            </p>
+          </div>
+
+          {/* Items */}
+          <div>
+            <h3 className="mb-3 font-semibold">
+              Ordered Items
+            </h3>
+
+            <div className="space-y-3">
+              {order.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60"
+                >
+                  <div>
+                    <p className="text-sm font-medium">
+                      {item.name}
+                    </p>
+
+                    <p className="mt-1 text-xs text-[var(--muted)]">
+                      ₹{item.price} × {item.quantity}
+                    </p>
+                  </div>
+
+                  <p className="font-semibold text-orange-500">
+                    ₹{item.price * item.quantity}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Total */}
+          <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
+            <span className="font-semibold">
+              Total
+            </span>
+
+            <span className="text-xl font-bold text-orange-500">
+              ₹{order.total}
+            </span>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Order Status
+            </label>
+
+            <select
+              value={order.status}
+              onChange={(event) =>
+                onStatusChange(
+                  order.id,
+                  event.target.value as OrderStatus
+                )
+              }
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm outline-none focus:border-orange-500"
+            >
+              {statuses.map((status) => (
+                <option
+                  key={status}
+                  value={status}
+                >
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/*
+ * Order Stat
+ */
+function OrderStat({
+  title,
+  value,
+  icon,
+  color,
+}: {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  color: "orange" | "blue" | "emerald" | "purple";
+}) {
+  const colors = {
+    orange:
+      "bg-orange-50 text-orange-500 dark:bg-orange-950/40",
+    blue:
+      "bg-blue-50 text-blue-500 dark:bg-blue-950/40",
+    emerald:
+      "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40",
+    purple:
+      "bg-purple-50 text-purple-500 dark:bg-purple-950/40",
+  };
+
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-[var(--muted)]">
+          {title}
+        </p>
+
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${colors[color]}`}
+        >
+          {icon}
+        </div>
+      </div>
+
+      <p className="mt-4 text-2xl font-bold">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+/*
+ * Move order to next status
+ */
+function moveToNextStatus(
+  order: Order,
+  onStatusChange: (
+    orderId: string,
+    status: OrderStatus
+  ) => void
+) {
+  const flow: OrderStatus[] = [
+    "Pending",
+    "Preparing",
+    "Ready",
+    "Completed",
+  ];
+
+  const currentIndex = flow.indexOf(
+    order.status
+  );
+
+  if (
+    currentIndex === -1 ||
+    currentIndex >= flow.length - 1
+  ) {
+    return;
+  }
+
+  onStatusChange(
+    order.id,
+    flow[currentIndex + 1]
   );
 }

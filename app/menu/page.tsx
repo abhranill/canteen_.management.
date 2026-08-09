@@ -849,6 +849,32 @@ const handlePlaceOrder = (
           </div>
         </div>
       )}
+            {/* Order Success */}
+      {orderSuccess && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 text-center shadow-2xl">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+              <Check size={28} />
+            </div>
+
+            <h2 className="text-xl font-bold">
+              Order Placed
+            </h2>
+
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              The order has been successfully added
+              to the order list.
+            </p>
+
+            <button
+              onClick={() => setOrderSuccess(false)}
+              className="mt-6 w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
