@@ -166,3 +166,12 @@ export function createOrder(
     status: "Pending",
   };
 }
+export function clearAppData() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  localStorage.removeItem("canteen-menu-items");
+  localStorage.removeItem("canteen-orders");
+  localStorage.removeItem("canteen-theme");
+}

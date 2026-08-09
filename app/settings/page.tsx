@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { clearAppData } from "@/lib/store";
+
 export default function SettingsPage() {
   const [darkMode, setDarkMode] = useState(false);
 
@@ -37,15 +39,14 @@ export default function SettingsPage() {
 
   const clearData = () => {
     const confirmed = window.confirm(
-      "This will remove saved menu data and application settings. Continue?"
+      "This will remove all saved menu items, orders and application settings. Continue?"
     );
 
     if (!confirmed) {
       return;
     }
 
-    localStorage.removeItem("canteen-menu-items");
-    localStorage.removeItem("canteen-theme");
+    clearAppData();
 
     window.location.reload();
   };
@@ -168,7 +169,7 @@ export default function SettingsPage() {
           </div>
         </SettingsSection>
 
-        {/* Data */}
+        {/* Application Data */}
         <SettingsSection
           icon={<Database size={20} />}
           title="Application Data"
@@ -181,8 +182,8 @@ export default function SettingsPage() {
               </p>
 
               <p className="mt-1 text-sm text-[var(--muted)]">
-                Remove saved menu items and application
-                preferences from this browser.
+                Remove saved menu items, orders and
+                application preferences from this browser.
               </p>
             </div>
 
