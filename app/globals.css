@@ -32,17 +32,72 @@ html {
 
 body {
   margin: 0;
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
 }
+
+/* Smooth theme transitions */
+
+body,
+button,
+input,
+select,
+textarea,
+div,
+section,
+aside,
+header {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* Buttons */
 
 button {
   font-family: inherit;
+  cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Inputs */
+
+input,
+select,
+textarea {
+  color: var(--foreground);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Selection */
+
+::selection {
+  background: #fed7aa;
+  color: #7c2d12;
+}
+
+/* Scrollbar */
+
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -52,4 +107,12 @@ button {
 
 .dark ::-webkit-scrollbar-thumb {
   background: #475569;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }

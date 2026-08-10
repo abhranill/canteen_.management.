@@ -24,7 +24,7 @@ import {
 export default function Home() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-
+const [search, setSearch] = useState("");
   useEffect(() => {
     const loadDashboard = () => {
       setMenuItems(getMenuItems());
@@ -70,38 +70,99 @@ export default function Home() {
   ).length;
 
   const recentOrders = orders.slice(0, 5);
-
+const searchResults = menuItems.filter((item) =>
+  item.name
+    .toLowerCase()
+    .includes(search.toLowerCase())
+);
   return (
     <main className="min-h-screen bg-[var(--background)] p-4 text-[var(--foreground)] sm:p-6 lg:p-8">
       {/* Welcome */}
-      <section className="mb-8">
-        <p className="mb-1 text-sm font-medium text-orange-500">
-          TODAY
-        </p>
+     <section className="mb-8">
+  <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+    <div>
+      <p className="mb-1 text-sm font-medium text-orange-500">
+        TODAY
+      </p>
 
-        <h1 className="text-2xl font-bold sm:text-3xl">
-          Good morning, Admin
-        </h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">
+        Good morning, Admin
+      </h1>
 
-        <p className="mt-2 text-[var(--muted)]">
-          Here's what's happening in your canteen
-          today.
-        </p>
-      </section>
+      <p className="mt-2 text-[var(--muted)]">
+        Here's what's happening in your canteen today.
+      </p>
+    </div>
+
+    <Link
+      href="/menu"
+      className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600 hover:shadow-orange-500/30"
+    >
+      <ShoppingBag size={17} />
+      Create Order
+    </Link>
+  </div>
+</section>
 
       {/* Search */}
-      <div className="mb-6 flex max-w-xl items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
-        <Search
-          size={19}
-          className="text-[var(--muted)]"
-        />
+     <div className="relative mb-6 max-w-xl">
+  <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+    <Search
+      size={19}
+      className="text-[var(--muted)]"
+    />
 
-        <input
-          type="text"
-          placeholder="Search menu items..."
-          className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-        />
-      </div>
+    <input
+      type="text"
+      value={search}
+      onChange={(event) =>
+        setSearch(event.target.value)
+      }
+      placeholder="Search menu items..."
+      className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+    />
+  </div>
+
+  {search.trim() && (
+    <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xl">
+      {searchResults.length > 0 ? (
+        <div className="max-h-64 overflow-y-auto p-2">
+          {searchResults.map((item) => (
+            <Link
+              key={item.id}
+              href="/menu"
+              className="flex items-center justify-between rounded-lg px-3 py-3 transition hover:bg-orange-50 dark:hover:bg-orange-950/30"
+            >
+              <div>
+                <p className="text-sm font-medium">
+                  {item.name}
+                </p>
+
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  {item.category}
+                </p>
+              </div>
+
+              <span className="text-sm font-bold text-orange-500">
+                ₹{item.price}
+              </span>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="p-5 text-center">
+          <p className="text-sm font-medium">
+            No menu items found
+          </p>
+
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            Try another item name.
+          </p>
+        </div>
+      )}
+    </div>
+  )}
+</div>
 
       {/* Stats */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

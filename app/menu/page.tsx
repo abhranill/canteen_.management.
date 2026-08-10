@@ -765,7 +765,7 @@ const handlePlaceOrder = (
               {/* Customer Name */}
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Customer Name
+                  Reciever's id
                 </label>
 
                 <input
@@ -776,7 +776,7 @@ const handlePlaceOrder = (
                       event.target.value
                     )
                   }
-                  placeholder="Enter customer name"
+                  placeholder="Enter reciever's id"
                   className="w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm outline-none transition focus:border-orange-500"
                   required
                 />
