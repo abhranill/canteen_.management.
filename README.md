@@ -1,36 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍴 CanteenHub
 
-## Getting Started
+A simple, responsive and modern canteen management application built with Next.js.
 
-First, run the development server:
+CanteenHub helps manage menu items, create customer orders, track order status and monitor daily canteen activity from a clean dashboard.
 
-```bash
+---
+
+## ✨ Features
+
+### 📊 Dashboard
+- Overview of daily orders
+- Total sales
+- Available menu items
+- Pending orders
+- Recent orders
+- Quick access to menu and orders
+- Menu item search
+
+### 🍔 Menu Management
+- View all menu items
+- Search menu items
+- Filter by category
+- Add new food items
+- Edit existing items
+- Delete items
+- Enable/disable item availability
+- Add items to cart
+
+### 🛒 Cart & Checkout
+- Add multiple items
+- Increase/decrease quantity
+- Remove items
+- Automatic total calculation
+- Customer name and phone number
+- Simple checkout flow
+
+### 📦 Order Management
+- View real orders
+- Search orders
+- Filter by order status
+- View complete order details
+- Update order status
+
+Order flow:
+
+`Pending → Preparing → Ready → Completed`
+
+### ⚙️ Settings
+- Light mode
+- Dark mode
+- Canteen information
+- Admin profile
+- Clear local application data
+
+### 📱 Responsive Design
+- Desktop
+- Laptop
+- Tablet
+- Mobile
+
+---
+
+## 🛠️ Tech Stack
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Lucide React
+- LocalStorage
+
+---
+
+## 📁 Project Structure
+
+```text
+canteen-management/
+│
+├── app/
+│   ├── menu/
+│   │   └── page.tsx
+│   │
+│   ├── orders/
+│   │   └── page.tsx
+│   │
+│   ├── settings/
+│   │   └── page.tsx
+│   │
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+│
+├── lib/
+│   └── store.ts
+│
+├── public/
+│
+├── package.json
+├── README.md
+└── tsconfig.json
+
+1. Clone the repository👇
+git clone YOUR_REPOSITORY_URL
+
+2. Enter the project👇
+cd canteen-management
+
+3. Install dependencies👇
+npm install
+
+4. Start the development server👇
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. Open in browser👇
+http://localhost:3000

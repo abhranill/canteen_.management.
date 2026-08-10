@@ -165,7 +165,7 @@ const searchResults = menuItems.filter((item) =>
 </div>
 
       {/* Stats */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+<section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Today's Orders"
           value={totalOrders.toString()}
@@ -200,7 +200,7 @@ const searchResults = menuItems.filter((item) =>
       </section>
 
       {/* Main Grid */}
-      <section className="mt-8 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+      <section className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[1.5fr_1fr]">
         {/* Recent Orders */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)]">
           <div className="flex items-center justify-between border-b border-[var(--border)] p-5">
@@ -321,7 +321,7 @@ const searchResults = menuItems.filter((item) =>
       </section>
 
       {/* Quick Actions */}
-      <section className="mt-6 grid gap-4 sm:grid-cols-2">
+      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Link
           href="/menu"
           className="group rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg"
