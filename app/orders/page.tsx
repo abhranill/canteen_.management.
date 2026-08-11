@@ -1,381 +1,622 @@
 "use client";
 
+import Link from "next/link";
+
 import {
   Search,
   ShoppingBag,
+  IndianRupee,
+  Utensils,
   Clock,
+  ArrowRight,
   CheckCircle2,
   ChefHat,
   PackageCheck,
-  XCircle,
-  Phone,
-  User,
-  X,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
 import {
+  MenuItem,
   Order,
-  OrderStatus,
+  getMenuItems,
   getOrders,
-  saveOrders,
 } from "@/lib/store";
 
-const statuses: OrderStatus[] = [
-  "Pending",
-  "Preparing",
-  "Ready",
-  "Completed",
-  "Cancelled",
-];
-
-export default function OrdersPage() {
+export default function Home() {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedStatus, setSelectedStatus] =
-    useState("All Orders");
 
-  const [selectedOrder, setSelectedOrder] =
-    useState<Order | null>(null);
-
-  /*
-   * Load orders
-   */
   useEffect(() => {
-    setOrders(getOrders());
-  }, []);
+    const loadDashboard = () => {
+      setMenuItems(getMenuItems());
+      setOrders(getOrders());
+    };
 
-  /*
-   * Filter orders
-   */
-  const filteredOrders = orders.filter((order) => {
-    const searchValue = search.toLowerCase();
+    loadDashboard();
 
-    const matchesSearch =
-      order.id.toLowerCase().includes(searchValue) ||
-      order.customer.toLowerCase().includes(searchValue) ||
-      order.phone.includes(searchValue);
-
-    const matchesStatus =
-      selectedStatus === "All Orders" ||
-      order.status === selectedStatus;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  /*
-   * Update order status
-   */
-  const updateOrderStatus = (
-    orderId: string,
-    status: OrderStatus
-  ) => {
-    const updatedOrders = orders.map((order) =>
-      order.id === orderId
-        ? {
-            ...order,
-            status,
-          }
-        : order
+    window.addEventListener(
+      "storage",
+      loadDashboard
     );
 
-    setOrders(updatedOrders);
-    saveOrders(updatedOrders);
+    return () => {
+      window.removeEventListener(
+        "storage",
+        loadDashboard
+      );
+    };
+  }, []);
 
-    if (selectedOrder?.id === orderId) {
-      setSelectedOrder({
-        ...selectedOrder,
-        status,
-      });
-    }
-  };
+  /* Dashboard calculations */
 
-  /*
-   * Status counts
-   */
-  const pendingCount = orders.filter(
-    (order) => order.status === "Pending"
+  const totalOrders = orders.length;
+
+  const totalSales = orders
+    .filter(
+      (order) => order.status !== "Cancelled"
+    )
+    .reduce(
+      (total, order) => total + order.total,
+      0
+    );
+
+  const pendingOrders = orders.filter(
+    (order) =>
+      order.status === "Pending" ||
+      order.status === "Preparing"
   ).length;
 
-  const preparingCount = orders.filter(
-    (order) => order.status === "Preparing"
+  const availableItems = menuItems.filter(
+    (item) => item.available
   ).length;
 
-  const readyCount = orders.filter(
-    (order) => order.status === "Ready"
-  ).length;
+  const unavailableItems =
+    menuItems.length - availableItems;
 
-  const completedCount = orders.filter(
-    (order) => order.status === "Completed"
-  ).length;
+  const recentOrders = orders.slice(0, 5);
+
+  /* Search */
+
+  const searchResults = menuItems.filter((item) =>
+    item.name
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
+  /* Sales goal */
+
+  const salesGoal = 5000;
+
+  const salesProgress = Math.min(
+    (totalSales / salesGoal) * 100,
+    100
+  );
 
   return (
     <main className="min-h-screen bg-[var(--background)] p-4 text-[var(--foreground)] sm:p-6 lg:p-8">
-      {/* Header */}
-      <section className="mb-8">
-        <p className="mb-1 text-sm font-medium text-orange-500">
-          ORDER MANAGEMENT
-        </p>
 
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      {/* Welcome */}
+      <section className="mb-8">
+        <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+
           <div>
+            <p className="mb-1 text-sm font-medium text-orange-500">
+              TODAY
+            </p>
+
             <h1 className="text-2xl font-bold sm:text-3xl">
-              Orders
+              Good morning, Admin
             </h1>
 
-            <p className="mt-2 text-sm text-[var(--muted)]">
-              Track and manage your canteen orders.
+            <p className="mt-2 text-[var(--muted)]">
+              Here's what's happening in your
+              canteen today.
             </p>
           </div>
 
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500 text-white">
-            <ShoppingBag size={21} />
-          </div>
+          <Link
+            href="/menu"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600 hover:shadow-orange-500/30"
+          >
+            <ShoppingBag size={17} />
+            Create Order
+          </Link>
+
         </div>
-      </section>
-
-      {/* Stats */}
-      <section className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <OrderStat
-          title="Pending"
-          value={pendingCount}
-          icon={<Clock size={19} />}
-          color="orange"
-        />
-
-        <OrderStat
-          title="Preparing"
-          value={preparingCount}
-          icon={<ChefHat size={19} />}
-          color="blue"
-        />
-
-        <OrderStat
-          title="Ready"
-          value={readyCount}
-          icon={<PackageCheck size={19} />}
-          color="emerald"
-        />
-
-        <OrderStat
-          title="Completed"
-          value={completedCount}
-          icon={<CheckCircle2 size={19} />}
-          color="purple"
-        />
       </section>
 
       {/* Search */}
-      <div className="mb-5 flex max-w-xl items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
-        <Search
-          size={19}
-          className="text-[var(--muted)]"
-        />
+      <div className="relative mb-6 max-w-xl">
 
-        <input
-          type="text"
-          value={search}
-          onChange={(event) =>
-            setSearch(event.target.value)
-          }
-          placeholder="Search order, customer or phone..."
-          className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-        />
-      </div>
+        <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
 
-      {/* Filters */}
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-        {["All Orders", ...statuses].map(
-          (status) => {
-            const active =
-              selectedStatus === status;
-
-            return (
-              <button
-                key={status}
-                onClick={() =>
-                  setSelectedStatus(status)
-                }
-                className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
-                  active
-                    ? "bg-orange-500 text-white shadow-md shadow-orange-500/20"
-                    : "border border-[var(--border)] bg-[var(--card)] text-[var(--muted)] hover:text-[var(--foreground)]"
-                }`}
-              >
-                {status}
-              </button>
-            );
-          }
-        )}
-      </div>
-
-      {/* Orders */}
-      {filteredOrders.length > 0 ? (
-        <div className="grid gap-4">
-          {filteredOrders.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              onView={() =>
-                setSelectedOrder(order)
-              }
-              onStatusChange={
-                updateOrderStatus
-              }
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)]">
-          <ShoppingBag
-            size={42}
-            className="mb-4 text-[var(--muted)]"
+          <Search
+            size={19}
+            className="text-[var(--muted)]"
           />
 
-          <h2 className="font-semibold">
-            No orders found
-          </h2>
+          <input
+            type="text"
+            value={search}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
+            placeholder="Search menu items..."
+            className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+          />
+
+        </div>
+
+        {search.trim() && (
+          <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xl">
+
+            {searchResults.length > 0 ? (
+
+              <div className="max-h-64 overflow-y-auto p-2">
+
+                {searchResults.map((item) => (
+                  <Link
+                    key={item.id}
+                    href="/menu"
+                    onClick={() => setSearch("")}
+                    className="flex items-center justify-between rounded-lg px-3 py-3 transition hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                  >
+
+                    <div>
+                      <p className="text-sm font-medium">
+                        {item.name}
+                      </p>
+
+                      <p className="mt-1 text-xs text-[var(--muted)]">
+                        {item.category}
+                      </p>
+                    </div>
+
+                    <span className="text-sm font-bold text-orange-500">
+                      ₹{item.price}
+                    </span>
+
+                  </Link>
+                ))}
+
+              </div>
+
+            ) : (
+
+              <div className="p-5 text-center">
+
+                <p className="text-sm font-medium">
+                  No menu items found
+                </p>
+
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  Try another item name.
+                </p>
+
+              </div>
+
+            )}
+
+          </div>
+        )}
+
+      </div>
+
+      {/* Stats */}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+        <StatCard
+          title="Today's Orders"
+          value={totalOrders.toString()}
+          description="Orders placed today"
+          icon={<ShoppingBag size={20} />}
+          color="orange"
+        />
+
+        <StatCard
+          title="Today's Sales"
+          value={`₹${totalSales}`}
+          description="From all active orders"
+          icon={<IndianRupee size={20} />}
+          color="emerald"
+        />
+
+        <StatCard
+          title="Menu Items"
+          value={availableItems.toString()}
+          description={`${menuItems.length} total items`}
+          icon={<Utensils size={20} />}
+          color="blue"
+        />
+
+        <StatCard
+          title="Pending Orders"
+          value={pendingOrders.toString()}
+          description="Needs attention"
+          icon={<Clock size={20} />}
+          color="purple"
+        />
+
+      </section>
+
+      {/* Sales Progress */}
+      <section className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+
+          <div>
+            <p className="text-sm font-semibold">
+              Today's Sales Goal
+            </p>
+
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              ₹{totalSales.toLocaleString("en-IN")} of ₹
+              {salesGoal.toLocaleString("en-IN")}
+            </p>
+          </div>
+
+          <span className="text-sm font-bold text-orange-500">
+            {Math.round(salesProgress)}%
+          </span>
+
+        </div>
+
+        <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+
+          <div
+            className="h-full rounded-full bg-orange-500 transition-all duration-500"
+            style={{
+              width: `${salesProgress}%`,
+            }}
+          />
+
+        </div>
+
+      </section>
+
+      {/* Main Grid */}
+      <section className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[1.5fr_1fr]">
+
+        {/* Recent Orders */}
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)]">
+
+          <div className="flex items-center justify-between border-b border-[var(--border)] p-5">
+
+            <div>
+              <h2 className="font-bold">
+                Recent Orders
+              </h2>
+
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Latest orders placed in the canteen
+              </p>
+            </div>
+
+            <Link
+              href="/orders"
+              className="flex items-center gap-1 text-sm font-semibold text-orange-500 hover:text-orange-600"
+            >
+              View all
+              <ArrowRight size={15} />
+            </Link>
+
+          </div>
+
+          {recentOrders.length > 0 ? (
+
+            <div className="divide-y divide-[var(--border)]">
+
+              {recentOrders.map((order) => (
+                <RecentOrder
+                  key={order.id}
+                  order={order}
+                />
+              ))}
+
+            </div>
+
+          ) : (
+
+            <div className="flex min-h-56 flex-col items-center justify-center p-6 text-center">
+
+              <ShoppingBag
+                size={36}
+                className="mb-3 text-[var(--muted)]"
+              />
+
+              <h3 className="font-semibold">
+                No orders yet
+              </h3>
+
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Orders placed from the menu will
+                appear here.
+              </p>
+
+              <Link
+                href="/menu"
+                className="mt-4 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600"
+              >
+                Create Order
+              </Link>
+
+            </div>
+
+          )}
+
+        </div>
+
+        {/* Canteen Overview */}
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+
+          <div className="mb-6">
+
+            <h2 className="font-bold">
+              Canteen Overview
+            </h2>
+
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Current status of your canteen.
+            </p>
+
+          </div>
+
+          <div className="space-y-4">
+
+            <OverviewRow
+              icon={<Utensils size={18} />}
+              label="Total Menu Items"
+              value={menuItems.length}
+              color="orange"
+            />
+
+            <OverviewRow
+              icon={<CheckCircle2 size={18} />}
+              label="Available Items"
+              value={availableItems}
+              color="emerald"
+            />
+
+            <OverviewRow
+              icon={<Clock size={18} />}
+              label="Unavailable Items"
+              value={unavailableItems}
+              color="orange"
+            />
+
+            <OverviewRow
+              icon={<ChefHat size={18} />}
+              label="Preparing Orders"
+              value={
+                orders.filter(
+                  (order) =>
+                    order.status === "Preparing"
+                ).length
+              }
+              color="blue"
+            />
+
+            <OverviewRow
+              icon={<PackageCheck size={18} />}
+              label="Ready Orders"
+              value={
+                orders.filter(
+                  (order) =>
+                    order.status === "Ready"
+                ).length
+              }
+              color="purple"
+            />
+
+          </div>
+
+          <Link
+            href="/menu"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold transition hover:border-orange-500 hover:text-orange-500"
+          >
+            Manage Menu
+            <ArrowRight size={16} />
+          </Link>
+
+        </div>
+
+      </section>
+
+      {/* Quick Actions */}
+      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+        <Link
+          href="/menu"
+          className="group rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg"
+        >
+
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orange-500 dark:bg-orange-950/40">
+            <Utensils size={21} />
+          </div>
+
+          <h3 className="font-bold">
+            Manage Menu
+          </h3>
 
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Orders placed from the menu will appear
-            here.
+            Add items, update prices and manage
+            availability.
           </p>
-        </div>
-      )}
 
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <OrderDetails
-          order={selectedOrder}
-          onClose={() => setSelectedOrder(null)}
-          onStatusChange={updateOrderStatus}
-        />
-      )}
+          <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-orange-500">
+
+            Open Menu
+
+            <ArrowRight
+              size={15}
+              className="transition group-hover:translate-x-1"
+            />
+
+          </div>
+
+        </Link>
+
+        <Link
+          href="/orders"
+          className="group rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg"
+        >
+
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-500 dark:bg-blue-950/40">
+            <ShoppingBag size={21} />
+          </div>
+
+          <h3 className="font-bold">
+            Manage Orders
+          </h3>
+
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            Track orders and update their status.
+          </p>
+
+          <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-orange-500">
+
+            Open Orders
+
+            <ArrowRight
+              size={15}
+              className="transition group-hover:translate-x-1"
+            />
+
+          </div>
+
+        </Link>
+
+      </section>
+
     </main>
   );
 }
 
 /*
- * Order Card
+ * Stat Card
  */
-function OrderCard({
-  order,
-  onView,
-  onStatusChange,
+
+function StatCard({
+  title,
+  value,
+  description,
+  icon,
+  color,
 }: {
-  order: Order;
-  onView: () => void;
-  onStatusChange: (
-    orderId: string,
-    status: OrderStatus
-  ) => void;
+  title: string;
+  value: string;
+  description: string;
+  icon: React.ReactNode;
+  color:
+    | "orange"
+    | "emerald"
+    | "blue"
+    | "purple";
 }) {
+  const colors = {
+    orange:
+      "bg-orange-50 text-orange-500 dark:bg-orange-950/40",
+    emerald:
+      "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40",
+    blue:
+      "bg-blue-50 text-blue-500 dark:bg-blue-950/40",
+    purple:
+      "bg-purple-50 text-purple-500 dark:bg-purple-950/40",
+  };
+
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:shadow-lg">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-        {/* Customer */}
-        <div className="flex items-start gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-500 dark:bg-orange-950/40">
-            <ShoppingBag size={20} />
-          </div>
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:-translate-y-0.5 hover:shadow-lg">
 
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-bold">
-                {order.id}
-              </h3>
+      <div className="flex items-center justify-between">
 
-              <StatusBadge status={order.status} />
-            </div>
+        <p className="text-sm text-[var(--muted)]">
+          {title}
+        </p>
 
-            <p className="mt-1 font-medium">
-              {order.customer}
-            </p>
-
-            <div className="mt-1 flex flex-wrap gap-3 text-xs text-[var(--muted)]">
-              <span className="flex items-center gap-1">
-                <Phone size={13} />
-                {order.phone}
-              </span>
-
-              <span className="flex items-center gap-1">
-                <Clock size={13} />
-                {order.time}
-              </span>
-            </div>
-          </div>
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${colors[color]}`}
+        >
+          {icon}
         </div>
 
-        {/* Items */}
-        <div className="lg:max-w-md lg:flex-1">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Items
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-            {order.items.map((item) => (
-              <span
-                key={item.id}
-                className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium dark:bg-slate-800"
-              >
-                {item.name} × {item.quantity}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Total + Actions */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:flex-col lg:items-end">
-          <div className="text-left sm:text-right">
-            <p className="text-xs text-[var(--muted)]">
-              Total
-            </p>
-
-            <p className="text-xl font-bold text-orange-500">
-              ₹{order.total}
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            {order.status !== "Completed" &&
-              order.status !== "Cancelled" && (
-                <button
-                  onClick={() =>
-                    moveToNextStatus(
-                      order,
-                      onStatusChange
-                    )
-                  }
-                  className="rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-semibold text-white hover:bg-orange-600"
-                >
-                  Next Status
-                </button>
-              )}
-
-            <button
-              onClick={onView}
-              className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-xs font-semibold hover:border-orange-500 hover:text-orange-500"
-            >
-              View
-            </button>
-          </div>
-        </div>
       </div>
+
+      <p className="mt-4 text-2xl font-bold">
+        {value}
+      </p>
+
+      <p className="mt-1 text-xs text-[var(--muted)]">
+        {description}
+      </p>
+
     </div>
   );
 }
 
 /*
- * Status Badge
+ * Recent Order
  */
-function StatusBadge({
+
+function RecentOrder({
+  order,
+}: {
+  order: Order;
+}) {
+  return (
+    <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+
+      <div className="flex items-center gap-3">
+
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-500 dark:bg-orange-950/40">
+          <ShoppingBag size={18} />
+        </div>
+
+        <div>
+
+          <p className="text-sm font-semibold">
+            {order.id}
+          </p>
+
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            {order.customer}
+          </p>
+
+          <p className="mt-1 flex items-center gap-1 text-xs text-[var(--muted)]">
+            <Clock size={12} />
+            {order.date} · {order.time}
+          </p>
+
+        </div>
+
+      </div>
+
+      <div className="flex items-center justify-between gap-4 sm:justify-end">
+
+        <OrderStatus status={order.status} />
+
+        <p className="font-bold text-orange-500">
+          ₹{order.total}
+        </p>
+
+      </div>
+
+    </div>
+  );
+}
+
+/*
+ * Status
+ */
+
+function OrderStatus({
   status,
 }: {
-  status: OrderStatus;
+  status: Order["status"];
 }) {
   const styles: Record<
-    OrderStatus,
+    Order["status"],
     string
   > = {
     Pending:
@@ -400,215 +641,56 @@ function StatusBadge({
 }
 
 /*
- * Order Details
+ * Overview Row
  */
-function OrderDetails({
-  order,
-  onClose,
-  onStatusChange,
-}: {
-  order: Order;
-  onClose: () => void;
-  onStatusChange: (
-    orderId: string,
-    status: OrderStatus
-  ) => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-[var(--border)] p-5">
-          <div>
-            <p className="text-xs font-medium text-orange-500">
-              ORDER DETAILS
-            </p>
 
-            <h2 className="mt-1 text-lg font-bold">
-              {order.id}
-            </h2>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-[var(--muted)] hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <X size={19} />
-          </button>
-        </div>
-
-        <div className="space-y-6 p-5">
-          {/* Customer */}
-          <div className="rounded-xl border border-[var(--border)] p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <User
-                size={17}
-                className="text-orange-500"
-              />
-
-              <h3 className="font-semibold">
-                Customer
-              </h3>
-            </div>
-
-            <p className="font-medium">
-              {order.customer}
-            </p>
-
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              {order.phone}
-            </p>
-          </div>
-
-          {/* Items */}
-          <div>
-            <h3 className="mb-3 font-semibold">
-              Ordered Items
-            </h3>
-
-            <div className="space-y-3">
-              {order.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60"
-                >
-                  <div>
-                    <p className="text-sm font-medium">
-                      {item.name}
-                    </p>
-
-                    <p className="mt-1 text-xs text-[var(--muted)]">
-                      ₹{item.price} × {item.quantity}
-                    </p>
-                  </div>
-
-                  <p className="font-semibold text-orange-500">
-                    ₹{item.price * item.quantity}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Total */}
-          <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
-            <span className="font-semibold">
-              Total
-            </span>
-
-            <span className="text-xl font-bold text-orange-500">
-              ₹{order.total}
-            </span>
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Order Status
-            </label>
-
-            <select
-              value={order.status}
-              onChange={(event) =>
-                onStatusChange(
-                  order.id,
-                  event.target.value as OrderStatus
-                )
-              }
-              className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm outline-none focus:border-orange-500"
-            >
-              {statuses.map((status) => (
-                <option
-                  key={status}
-                  value={status}
-                >
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/*
- * Order Stat
- */
-function OrderStat({
-  title,
-  value,
+function OverviewRow({
   icon,
+  label,
+  value,
   color,
 }: {
-  title: string;
-  value: number;
   icon: React.ReactNode;
-  color: "orange" | "blue" | "emerald" | "purple";
+  label: string;
+  value: number;
+  color:
+    | "orange"
+    | "emerald"
+    | "blue"
+    | "purple";
 }) {
   const colors = {
     orange:
       "bg-orange-50 text-orange-500 dark:bg-orange-950/40",
-    blue:
-      "bg-blue-50 text-blue-500 dark:bg-blue-950/40",
     emerald:
       "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40",
+    blue:
+      "bg-blue-50 text-blue-500 dark:bg-blue-950/40",
     purple:
       "bg-purple-50 text-purple-500 dark:bg-purple-950/40",
   };
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-[var(--muted)]">
-          {title}
-        </p>
+    <div className="flex items-center justify-between rounded-xl border border-[var(--border)] p-3">
+
+      <div className="flex items-center gap-3">
 
         <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl ${colors[color]}`}
+          className={`flex h-9 w-9 items-center justify-center rounded-lg ${colors[color]}`}
         >
           {icon}
         </div>
+
+        <span className="text-sm font-medium">
+          {label}
+        </span>
+
       </div>
 
-      <p className="mt-4 text-2xl font-bold">
+      <span className="font-bold">
         {value}
-      </p>
+      </span>
+
     </div>
-  );
-}
-
-/*
- * Move order to next status
- */
-function moveToNextStatus(
-  order: Order,
-  onStatusChange: (
-    orderId: string,
-    status: OrderStatus
-  ) => void
-) {
-  const flow: OrderStatus[] = [
-    "Pending",
-    "Preparing",
-    "Ready",
-    "Completed",
-  ];
-
-  const currentIndex = flow.indexOf(
-    order.status
-  );
-
-  if (
-    currentIndex === -1 ||
-    currentIndex >= flow.length - 1
-  ) {
-    return;
-  }
-
-  onStatusChange(
-    order.id,
-    flow[currentIndex + 1]
   );
 }

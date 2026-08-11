@@ -27,6 +27,7 @@ export type Order = {
   items: CartItem[];
   total: number;
   time: string;
+  date: string;
   status: OrderStatus;
 };
 
@@ -145,27 +146,43 @@ export function saveOrders(orders: Order[]) {
 export function createOrder(
   customer: string,
   phone: string,
-  items: CartItem[]
+  cartItems: CartItem[]
 ): Order {
-  const total = items.reduce(
+  const now = new Date();
+
+  const orderNumber = Math.floor(
+    100000 + Math.random() * 900000
+  );
+
+  const orderId = `ORD-${orderNumber}`;
+
+  const total = cartItems.reduce(
     (sum, item) =>
       sum + item.price * item.quantity,
     0
   );
 
   return {
-    id: `ORD-${Date.now().toString().slice(-6)}`,
+    id: orderId,
     customer,
     phone,
-    items,
+    items: cartItems,
     total,
-    time: new Date().toLocaleTimeString([], {
+    status: "Pending",
+
+    time: now.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     }),
-    status: "Pending",
+
+    date: now.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
   };
 }
+
 export function clearAppData() {
   if (typeof window === "undefined") {
     return;
