@@ -77,7 +77,7 @@ export default function Home() {
 
   const recentOrders = orders.slice(0, 5);
 
-  /* Search */
+  /* Search button*/
 
   const searchResults = menuItems.filter((item) =>
     item.name
@@ -85,7 +85,7 @@ export default function Home() {
       .includes(search.toLowerCase())
   );
 
-  /* Sales goal */
+  /*daily Sales goal */
 
   const salesGoal = 5000;
 
@@ -127,7 +127,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Search */}
+      {/* Search button*/}
       <div className="relative mb-6 max-w-xl">
 
         <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
@@ -204,7 +204,7 @@ export default function Home() {
 
       </div>
 
-      {/* Stats */}
+      {/* Stats section*/}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
         <StatCard

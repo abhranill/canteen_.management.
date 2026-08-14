@@ -150,7 +150,7 @@ export default function SettingsPage() {
           </button>
         </SettingsSection>
 
-        {/* Admin */}
+        {/* Admin option*/}
         <SettingsSection
           icon={<UserRound size={20} />}
           title="Admin Profile"

@@ -782,7 +782,7 @@ const handlePlaceOrder = (
                 />
               </div>
 
-              {/* Phone */}
+              {/* Phone responsive*/}
               <div>
                 <label className="mb-2 block text-sm font-medium">
                   Phone Number

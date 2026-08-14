@@ -320,7 +320,7 @@ const searchResults = menuItems.filter((item) =>
         </div>
       </section>
 
-      {/* Quick Actions */}
+      {/* Quick Actions button*/}
       <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Link
           href="/menu"
