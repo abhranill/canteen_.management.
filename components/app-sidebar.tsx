@@ -219,7 +219,7 @@ export default function AppSidebar() {
         </div>
       </header>
 
-      {/* Mobile Controls section*/}
+      {/* Mobile Controls section.*/}
       <div className="flex items-center justify-end border-b border-[var(--border)] bg-[var(--card)] px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
           <button
