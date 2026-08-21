@@ -96,13 +96,13 @@ export default function AppSidebar() {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar section*/}
       <aside
         className={`fixed left-0 top-0 z-50 h-screen w-64 border-r border-[var(--border)] bg-[var(--card)] p-5 transition-transform duration-300 lg:translate-x-0 ${
           mobileMenu ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Brand */}
+        {/* Brand section*/}
         <div className="mb-10 flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500 text-white">
             <ChefHat size={24} />
@@ -175,7 +175,7 @@ export default function AppSidebar() {
         </div>
       </aside>
 
-      {/* Desktop Header */}
+      {/* Desktop Header section*/}
       <header className="fixed right-0 top-0 z-30 hidden h-16 items-center justify-between border-b border-[var(--border)] bg-[var(--card)] px-8 lg:left-64 lg:flex">
         <p className="text-sm text-[var(--muted)]">
           Canteen Management
@@ -219,7 +219,7 @@ export default function AppSidebar() {
         </div>
       </header>
 
-      {/* Mobile Controls section.*/}
+      {/* Mobile Controls section*/}
       <div className="flex items-center justify-end border-b border-[var(--border)] bg-[var(--card)] px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
           <button
