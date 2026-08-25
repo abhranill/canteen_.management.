@@ -4,9 +4,9 @@ A simple, responsive and modern canteen management application built with Next.j
 
 CanteenHub helps manage menu items, create customer orders, track order status and monitor daily canteen activity from a clean dashboard.
 
------
+------
 
-## ✨ Features
+### ✨ Features
 
 ### 📊 Dashboard
 - Overview of daily orders
@@ -59,7 +59,7 @@ Order flow:
 - Tablet
 - Mobile
 
----
+-----
 
 ## 🛠️ Tech Stack
 
