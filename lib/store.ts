@@ -4,6 +4,7 @@ export type MenuItem = {
   category: string;
   price: number;
   available: boolean;
+  stock: number;
 };
 
 export type CartItem = {
@@ -38,6 +39,7 @@ export const defaultMenuItems: MenuItem[] = [
     category: "Fast Food",
     price: 60,
     available: true,
+    stock: 20,
   },
   {
     id: 2,
@@ -45,6 +47,7 @@ export const defaultMenuItems: MenuItem[] = [
     category: "Fast Food",
     price: 70,
     available: true,
+    stock: 15,
   },
   {
     id: 3,
@@ -52,6 +55,7 @@ export const defaultMenuItems: MenuItem[] = [
     category: "Beverages",
     price: 15,
     available: true,
+    stock: 40,
   },
   {
     id: 4,
@@ -59,6 +63,7 @@ export const defaultMenuItems: MenuItem[] = [
     category: "Beverages",
     price: 50,
     available: true,
+    stock: 20,
   },
   {
     id: 5,
@@ -66,6 +71,7 @@ export const defaultMenuItems: MenuItem[] = [
     category: "Meals",
     price: 90,
     available: true,
+    stock: 10,
   },
   {
     id: 6,
@@ -73,6 +79,7 @@ export const defaultMenuItems: MenuItem[] = [
     category: "Healthy",
     price: 50,
     available: false,
+    stock: 0,
   },
 ];
 

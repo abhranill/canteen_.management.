@@ -4,7 +4,6 @@ import {
   Search,
   Plus,
   ShoppingCart,
-  Utensils,
   Coffee,
   Sandwich,
   Salad,
@@ -45,17 +44,18 @@ export default function MenuPage() {
 
   const [showModal, setShowModal] = useState(false);
   const [showCart, setShowCart] = useState(false);
-const [showCheckout, setShowCheckout] =
-  useState(false);
+  const [showCheckout, setShowCheckout] =
+    useState(false);
 
-const [customerName, setCustomerName] =
-  useState("");
+  const [customerName, setCustomerName] =
+    useState("");
 
-const [customerPhone, setCustomerPhone] =
-  useState("");
+  const [customerPhone, setCustomerPhone] =
+    useState("");
 
-const [orderSuccess, setOrderSuccess] =
-  useState(false);
+  const [orderSuccess, setOrderSuccess] =
+    useState(false);
+
   const [editingItem, setEditingItem] =
     useState<MenuItem | null>(null);
 
@@ -63,6 +63,7 @@ const [orderSuccess, setOrderSuccess] =
   const [formCategory, setFormCategory] =
     useState("Fast Food");
   const [formPrice, setFormPrice] = useState("");
+  const [formStock, setFormStock] = useState("10");
 
   /*
    * Load menu
@@ -107,7 +108,7 @@ const [orderSuccess, setOrderSuccess] =
    * Add to cart
    */
   const addToCart = (item: MenuItem) => {
-    if (!item.available) {
+    if (!item.available || item.stock <= 0) {
       return;
     }
 
@@ -117,6 +118,10 @@ const [orderSuccess, setOrderSuccess] =
       );
 
       if (existingItem) {
+        if (existingItem.quantity >= item.stock) {
+          return currentCart;
+        }
+
         return currentCart.map((cartItem) =>
           cartItem.id === item.id
             ? {
@@ -143,12 +148,23 @@ const [orderSuccess, setOrderSuccess] =
    * Increase quantity
    */
   const increaseQuantity = (id: number) => {
+    const menuItem = items.find(
+      (item) => item.id === id
+    );
+
+    if (!menuItem) {
+      return;
+    }
+
     setCart((currentCart) =>
       currentCart.map((item) =>
         item.id === id
           ? {
               ...item,
-              quantity: item.quantity + 1,
+              quantity:
+                item.quantity < menuItem.stock
+                  ? item.quantity + 1
+                  : item.quantity,
             }
           : item
       )
@@ -181,53 +197,104 @@ const [orderSuccess, setOrderSuccess] =
       currentCart.filter((item) => item.id !== id)
     );
   };
-/*
- * Open checkout
- */
-const openCheckout = () => {
-  if (cart.length === 0) {
-    return;
-  }
 
-  setShowCart(false);
-  setShowCheckout(true);
-};
+  /*
+   * Open checkout
+   */
+  const openCheckout = () => {
+    if (cart.length === 0) {
+      return;
+    }
 
-/*
- * Place order
- */
-const handlePlaceOrder = (
-  event: React.FormEvent
-) => {
-  event.preventDefault();
+    setShowCart(false);
+    setShowCheckout(true);
+  };
 
-  const name = customerName.trim();
-  const phone = customerPhone.trim();
+  /*
+   * Place order
+   */
+  const handlePlaceOrder = (
+    event: React.FormEvent
+  ) => {
+    event.preventDefault();
 
-  if (!name || !phone || cart.length === 0) {
-    return;
-  }
+    const name = customerName.trim();
+    const phone = customerPhone.trim();
 
-  const newOrder = createOrder(
-    name,
-    phone,
-    cart
-  );
+    if (!name || !phone || cart.length === 0) {
+      return;
+    }
 
-  const existingOrders = getOrders();
+    /*
+     * Double-check stock before placing order
+     */
+    const stockAvailable = cart.every((cartItem) => {
+      const menuItem = items.find(
+        (item) => item.id === cartItem.id
+      );
 
-  saveOrders([
-    newOrder,
-    ...existingOrders,
-  ]);
+      return (
+        menuItem &&
+        menuItem.available &&
+        menuItem.stock >= cartItem.quantity
+      );
+    });
 
-  setCart([]);
-  setCustomerName("");
-  setCustomerPhone("");
+    if (!stockAvailable) {
+      alert(
+        "One or more items do not have enough stock."
+      );
+      return;
+    }
 
-  setShowCheckout(false);
-  setOrderSuccess(true);
-};
+    const newOrder = createOrder(
+      name,
+      phone,
+      cart
+    );
+
+    const existingOrders = getOrders();
+
+    saveOrders([
+      newOrder,
+      ...existingOrders,
+    ]);
+
+    /*
+     * Reduce stock after successful order
+     */
+    const updatedItems = items.map((menuItem) => {
+      const orderedItem = cart.find(
+        (cartItem) =>
+          cartItem.id === menuItem.id
+      );
+
+      if (!orderedItem) {
+        return menuItem;
+      }
+
+      const newStock =
+        menuItem.stock - orderedItem.quantity;
+
+      return {
+        ...menuItem,
+        stock: Math.max(newStock, 0),
+        available:
+          newStock > 0 && menuItem.available,
+      };
+    });
+
+    setItems(updatedItems);
+    saveMenuItems(updatedItems);
+
+    setCart([]);
+    setCustomerName("");
+    setCustomerPhone("");
+
+    setShowCheckout(false);
+    setOrderSuccess(true);
+  };
+
   /*
    * Add modal
    */
@@ -236,6 +303,7 @@ const handlePlaceOrder = (
     setFormName("");
     setFormCategory("Fast Food");
     setFormPrice("");
+    setFormStock("10");
     setShowModal(true);
   };
 
@@ -247,6 +315,7 @@ const handlePlaceOrder = (
     setFormName(item.name);
     setFormCategory(item.category);
     setFormPrice(item.price.toString());
+    setFormStock(item.stock.toString());
     setShowModal(true);
   };
 
@@ -259,6 +328,7 @@ const handlePlaceOrder = (
     setFormName("");
     setFormCategory("Fast Food");
     setFormPrice("");
+    setFormStock("10");
   };
 
   /*
@@ -271,8 +341,14 @@ const handlePlaceOrder = (
 
     const name = formName.trim();
     const price = Number(formPrice);
+    const stock = Number(formStock);
 
-    if (!name || !price || price <= 0) {
+    if (
+      !name ||
+      !price ||
+      price <= 0 ||
+      stock < 0
+    ) {
       return;
     }
 
@@ -286,6 +362,11 @@ const handlePlaceOrder = (
               name,
               category: formCategory,
               price,
+              stock,
+              available:
+                stock > 0
+                  ? item.available
+                  : false,
             }
           : item
       );
@@ -295,7 +376,8 @@ const handlePlaceOrder = (
         name,
         category: formCategory,
         price,
-        available: true,
+        available: stock > 0,
+        stock,
       };
 
       updatedItems = [...items, newItem];
@@ -333,14 +415,20 @@ const handlePlaceOrder = (
    * Availability
    */
   const toggleAvailability = (id: number) => {
-    const updatedItems = items.map((item) =>
-      item.id === id
-        ? {
-            ...item,
-            available: !item.available,
-          }
-        : item
-    );
+    const updatedItems = items.map((item) => {
+      if (item.id !== id) {
+        return item;
+      }
+
+      if (item.stock <= 0) {
+        return item;
+      }
+
+      return {
+        ...item,
+        available: !item.available,
+      };
+    });
 
     setItems(updatedItems);
     saveMenuItems(updatedItems);
@@ -366,13 +454,11 @@ const handlePlaceOrder = (
           </div>
 
           <div className="flex gap-3">
-            {/* Cart */}
             <button
               onClick={() => setShowCart(true)}
               className="relative flex items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm font-semibold transition hover:border-orange-500"
             >
               <ShoppingCart size={18} />
-
               Cart
 
               {cartCount > 0 && (
@@ -382,7 +468,6 @@ const handlePlaceOrder = (
               )}
             </button>
 
-            {/* Add Item */}
             <button
               onClick={openAddModal}
               className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600"
@@ -570,6 +655,24 @@ const handlePlaceOrder = (
                 </div>
               </div>
 
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  Stock Quantity
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  value={formStock}
+                  onChange={(event) =>
+                    setFormStock(event.target.value)
+                  }
+                  placeholder="10"
+                  className="w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm outline-none focus:border-orange-500"
+                  required
+                />
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
@@ -598,15 +701,12 @@ const handlePlaceOrder = (
       {/* Cart Drawer */}
       {showCart && (
         <div className="fixed inset-0 z-[100]">
-          {/* Overlay */}
           <div
             onClick={() => setShowCart(false)}
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           />
 
-          {/* Drawer */}
           <div className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-[var(--border)] bg-[var(--card)] shadow-2xl">
-            {/* Cart Header */}
             <div className="flex items-center justify-between border-b border-[var(--border)] p-5">
               <div>
                 <h2 className="text-lg font-bold">
@@ -627,7 +727,6 @@ const handlePlaceOrder = (
               </button>
             </div>
 
-            {/* Cart Items */}
             <div className="flex-1 overflow-y-auto p-5">
               {cart.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center text-center">
@@ -691,7 +790,15 @@ const handlePlaceOrder = (
                             onClick={() =>
                               increaseQuantity(item.id)
                             }
-                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+                            disabled={
+                              item.quantity >=
+                              (items.find(
+                                (menuItem) =>
+                                  menuItem.id ===
+                                  item.id
+                              )?.stock ?? 0)
+                            }
+                            className="p-2 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
                           >
                             <Plus size={15} />
                           </button>
@@ -707,7 +814,6 @@ const handlePlaceOrder = (
               )}
             </div>
 
-            {/* Cart Footer */}
             {cart.length > 0 && (
               <div className="border-t border-[var(--border)] p-5">
                 <div className="mb-4 flex items-center justify-between">
@@ -721,21 +827,21 @@ const handlePlaceOrder = (
                 </div>
 
                 <button
-  onClick={openCheckout}
-  className="w-full rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600"
->
-  Continue to Order
-</button>
+                  onClick={openCheckout}
+                  className="w-full rounded-xl bg-orange-500 px-4 py-3 font-semibold text-white transition hover:bg-orange-600"
+                >
+                  Continue to Order
+                </button>
               </div>
             )}
           </div>
         </div>
       )}
-            {/* Checkout Modal */}
+
+      {/* Checkout Modal */}
       {showCheckout && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl">
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-[var(--border)] p-5">
               <div>
                 <h2 className="text-lg font-bold">
@@ -757,15 +863,13 @@ const handlePlaceOrder = (
               </button>
             </div>
 
-            {/* Form */}
             <form
               onSubmit={handlePlaceOrder}
               className="space-y-5 p-5"
             >
-              {/* Customer Name */}
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Reciever's id
+                  Receiver's ID
                 </label>
 
                 <input
@@ -776,13 +880,12 @@ const handlePlaceOrder = (
                       event.target.value
                     )
                   }
-                  placeholder="Enter reciever's id"
+                  placeholder="Enter receiver's ID"
                   className="w-full rounded-xl border border-[var(--border)] bg-transparent px-4 py-3 text-sm outline-none transition focus:border-orange-500"
                   required
                 />
               </div>
 
-              {/* Phone responsive*/}
               <div>
                 <label className="mb-2 block text-sm font-medium">
                   Phone Number
@@ -802,7 +905,6 @@ const handlePlaceOrder = (
                 />
               </div>
 
-              {/* Order Summary */}
               <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-sm text-[var(--muted)]">
@@ -825,7 +927,6 @@ const handlePlaceOrder = (
                 </div>
               </div>
 
-              {/* Buttons */}
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -849,7 +950,8 @@ const handlePlaceOrder = (
           </div>
         </div>
       )}
-            {/* Order Success */}
+
+      {/* Order Success */}
       {orderSuccess && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 text-center shadow-2xl">
@@ -901,9 +1003,11 @@ function MenuCard({
           ? Soup
           : Sandwich;
 
+  const isAvailable =
+    item.available && item.stock > 0;
+
   return (
     <div className="group overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] transition hover:-translate-y-1 hover:shadow-xl">
-      {/* Visual */}
       <div className="relative flex h-40 items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 text-orange-500 dark:from-orange-950/40 dark:to-amber-950/30">
         <Icon
           size={58}
@@ -912,18 +1016,17 @@ function MenuCard({
 
         <span
           className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold ${
-            item.available
+            isAvailable
               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
               : "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400"
           }`}
         >
-          {item.available
+          {isAvailable
             ? "Available"
-            : "Unavailable"}
+            : "Out of Stock"}
         </span>
       </div>
 
-      {/* Details */}
       <div className="p-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -934,6 +1037,16 @@ function MenuCard({
             <p className="mt-1 text-xs text-[var(--muted)]">
               {item.category}
             </p>
+
+            <p
+              className={`mt-1 text-xs font-medium ${
+                item.stock > 0
+                  ? "text-[var(--muted)]"
+                  : "text-red-500"
+              }`}
+            >
+              Stock: {item.stock}
+            </p>
           </div>
 
           <span className="font-bold text-orange-500">
@@ -941,36 +1054,39 @@ function MenuCard({
           </span>
         </div>
 
-        {/* Ordering */}
         <button
           onClick={() => onAddToCart(item)}
-          disabled={!item.available}
+          disabled={!isAvailable}
           className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
         >
           <ShoppingCart size={17} />
 
-          {item.available
+          {isAvailable
             ? "Add to Cart"
-            : "Unavailable"}
+            : "Out of Stock"}
         </button>
 
-        {/* Admin Actions */}
         <div className="flex gap-2">
           <button
             onClick={() =>
               onToggleAvailability(item.id)
             }
+            disabled={item.stock <= 0}
             className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition ${
-              item.available
-                ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              item.stock <= 0
+                ? "cursor-not-allowed bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
+                : item.available
+                  ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
             }`}
           >
             <Check size={14} />
 
-            {item.available
-              ? "Available"
-              : "Enable"}
+            {item.stock <= 0
+              ? "Out of Stock"
+              : item.available
+                ? "Available"
+                : "Enable"}
           </button>
 
           <button
