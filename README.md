@@ -1,67 +1,72 @@
-# CanteenHub
+# 🍴 CanteenHub
 
 A simple, responsive and modern canteen management application built with Next.js.
 
-CanteenHub helps manage menu items, create customer orders, track order status and monitor daily canteen activity from a clean dashboard.
+CanteenHub helps manage menu items, create customer orders, track order status and monitor daily canteen activity through a clean and easy-to-use dashboard.
 
-------
+---
 
 ## ✨ Features
 
-### Dashboard
-- Overview of daily orders
-- Total sales
-- Available menu items
-- Pending orders
-- Recent orders
-- Quick access to menu and orders
+### 📊 Dashboard
+- Daily order overview
+- Sales tracking
+- Menu item statistics
+- Available & unavailable item count
+- Pending, preparing and ready order count
+- Recent orders with Order ID, date and time
+- Today's sales goal progress
+- Quick actions
 - Menu item search
 
-### Menu Management
-- View all menu items
+### 🍔 Menu Management
+- View menu items
 - Search menu items
 - Filter by category
 - Add new food items
-- Edit existing items
-- Delete items
-- Enable/disable item availability
+- Edit menu items
+- Delete menu items
+- Manage item availability
 - Add items to cart
 
-### Cart & Checkout
-- Add multiple items
+### 🛒 Cart & Checkout
+- Add multiple items to cart
 - Increase/decrease quantity
 - Remove items
 - Automatic total calculation
-- Customer name and phone number
+- Customer information
 - Simple checkout flow
 
-### Order Management
-- View real orders
+### 📦 Order Management
+- View all orders
 - Search orders
 - Filter by order status
-- View complete order details
+- View order details
 - Update order status
+- Unique Order IDs
+- Order date and time
 
-Order flow:
+Order workflow:
 
 `Pending → Preparing → Ready → Completed`
 
-### Settings
+### ⚙️ Settings
 - Light mode
 - Dark mode
 - Canteen information
 - Admin profile
 - Clear local application data
 
-### Responsive Design
+### 📱 Responsive Design
+Works across:
 - Desktop
 - Laptop
 - Tablet
 - Mobile
 
------
+---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 - Next.js
 - React
@@ -72,7 +77,7 @@ Order flow:
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```text
 canteen-management/
@@ -99,18 +104,3 @@ canteen-management/
 ├── package.json
 ├── README.md
 └── tsconfig.json
-
-1. Clone the repository
-git clone YOUR_REPOSITORY_URL
-
-2. Enter the project
-cd canteen-management
-
-3. Install dependencies
-npm install
-
-4. Start the development server
-npm run dev
-
-5. Open in browser
-http://localhost:3000
