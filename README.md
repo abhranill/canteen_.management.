@@ -1,4 +1,4 @@
-# 🍴 CanteenHub
+# CanteenHub
 
 A simple, responsive and modern canteen management application built with Next.js.
 
@@ -6,9 +6,9 @@ CanteenHub helps manage menu items, create customer orders, track order status a
 
 ---
 
-## ✨ Features
+## Features
 
-### 📊 Dashboard
+### Dashboard
 - Overview of daily orders
 - Total sales
 - Available menu items
@@ -17,7 +17,7 @@ CanteenHub helps manage menu items, create customer orders, track order status a
 - Quick access to menu and orders
 - Menu item search
 
-### 🍔 Menu Management
+### Menu Management
 - View all menu items
 - Search menu items
 - Filter by category
@@ -27,7 +27,7 @@ CanteenHub helps manage menu items, create customer orders, track order status a
 - Enable/disable item availability
 - Add items to cart
 
-### 🛒 Cart & Checkout
+### Cart & Checkout
 - Add multiple items
 - Increase/decrease quantity
 - Remove items
@@ -35,7 +35,7 @@ CanteenHub helps manage menu items, create customer orders, track order status a
 - Customer name and phone number
 - Simple checkout flow
 
-### 📦 Order Management
+### Order Management
 - View real orders
 - Search orders
 - Filter by order status
@@ -46,14 +46,14 @@ Order flow:
 
 `Pending → Preparing → Ready → Completed`
 
-### ⚙️ Settings
+### Settings
 - Light mode
 - Dark mode
 - Canteen information
 - Admin profile
 - Clear local application data
 
-### 📱 Responsive Design
+### Responsive Design
 - Desktop
 - Laptop
 - Tablet
@@ -61,7 +61,7 @@ Order flow:
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - Next.js
 - React
@@ -72,7 +72,7 @@ Order flow:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 canteen-management/
@@ -100,17 +100,17 @@ canteen-management/
 ├── README.md
 └── tsconfig.json
 
-1. Clone the repository👇
+1. Clone the repository
 git clone YOUR_REPOSITORY_URL
 
-2. Enter the project👇
+2. Enter the project
 cd canteen-management
 
-3. Install dependencies👇
+3. Install dependencies
 npm install
 
-4. Start the development server👇
+4. Start the development server
 npm run dev
 
-5. Open in browser👇
+5. Open in browser
 http://localhost:3000
