@@ -14,12 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="min-h-screen overflow-x-hidden">
         <AppSidebar />
 
-        <div className="lg:ml-64 pt-16">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );
