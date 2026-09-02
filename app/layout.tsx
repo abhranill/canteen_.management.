@@ -17,7 +17,9 @@ export default function RootLayout({
       <body className="min-h-screen overflow-x-hidden">
         <AppSidebar />
 
-        {children}
+        <main className="min-h-screen lg:ml-64">
+          {children}
+        </main>
       </body>
     </html>
   );
