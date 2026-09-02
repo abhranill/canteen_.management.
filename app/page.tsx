@@ -2,57 +2,70 @@
 
 import Link from "next/link";
 import {
-  Search,
-  ShoppingBag,
-  IndianRupee,
+  LayoutDashboard,
   Utensils,
-  Clock,
-  ArrowRight,
-  CheckCircle2,
+  ShoppingBag,
+  Settings,
+  Sun,
+  Moon,
+  Bell,
+  Search,
+  Menu,
+  X,
   ChefHat,
-  PackageCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-
 import {
-  MenuItem,
-  Order,
   getMenuItems,
   getOrders,
+  MenuItem,
+  Order,
 } from "@/lib/store";
 
 export default function Home() {
+  const [darkMode, setDarkMode] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
+
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("");
+
   useEffect(() => {
-    const loadDashboard = () => {
-      setMenuItems(getMenuItems());
-      setOrders(getOrders());
-    };
-
-    loadDashboard();
-
-    window.addEventListener(
-      "storage",
-      loadDashboard
+    setDarkMode(
+      document.documentElement.classList.contains("dark")
     );
 
-    return () => {
-      window.removeEventListener(
-        "storage",
-        loadDashboard
-      );
-    };
+    setMenuItems(getMenuItems());
+    setOrders(getOrders());
   }, []);
 
-  /*
-   * Dashboard calculations
-   */
+  const toggleTheme = () => {
+    const newTheme = !darkMode;
 
-  const totalOrders = orders.length;
+    setDarkMode(newTheme);
 
-  const totalSales = orders
+    if (newTheme) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("canteen-theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("canteen-theme", "light");
+    }
+  };
+
+  const today = new Date().toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  const todayOrders = orders.filter(
+    (order) => order.date === today
+  );
+
+  const totalOrders = todayOrders.length;
+
+  const totalSales = todayOrders
     .filter((order) => order.status !== "Cancelled")
     .reduce(
       (total, order) => total + order.total,
@@ -69,490 +82,459 @@ const [search, setSearch] = useState("");
     (item) => item.available
   ).length;
 
-  const recentOrders = orders.slice(0, 5);
-const searchResults = menuItems.filter((item) =>
-  item.name
-    .toLowerCase()
-    .includes(search.toLowerCase())
-);
+  const popularItems = menuItems
+    .filter((item) => item.available)
+    .map((item) => {
+      const orderCount = orders.reduce(
+        (count, order) => {
+          const itemInOrder = order.items.find(
+            (orderItem) => orderItem.id === item.id
+          );
+
+          return (
+            count + (itemInOrder?.quantity ?? 0)
+          );
+        },
+        0
+      );
+
+      return {
+        ...item,
+        orderCount,
+      };
+    })
+    .sort(
+      (a, b) => b.orderCount - a.orderCount
+    )
+    .slice(0, 3);
+
+  const filteredPopularItems = popularItems.filter(
+    (item) =>
+      item.name
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      item.category
+        .toLowerCase()
+        .includes(search.toLowerCase())
+  );
+
   return (
-    <main className="min-h-screen bg-[var(--background)] p-4 text-[var(--foreground)] sm:p-6 lg:p-8">
-      {/* Welcome */}
-     <section className="mb-8">
-  <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-    <div>
-      <p className="mb-1 text-sm font-medium text-orange-500">
-        TODAY
-      </p>
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors">
 
-      <h1 className="text-2xl font-bold sm:text-3xl">
-        Good morning, Admin
-      </h1>
+      {/* Mobile Header */}
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-[var(--border)] bg-[var(--card)] px-4 lg:hidden">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500 text-white">
+            <ChefHat size={20} />
+          </div>
 
-      <p className="mt-2 text-[var(--muted)]">
-        Here's what's happening in your canteen today.
-      </p>
-    </div>
-
-    <Link
-      href="/menu"
-      className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600 hover:shadow-orange-500/30"
-    >
-      <ShoppingBag size={17} />
-      Create Order
-    </Link>
-  </div>
-</section>
-
-      {/* Search */}
-     <div className="relative mb-6 max-w-xl">
-  <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
-    <Search
-      size={19}
-      className="text-[var(--muted)]"
-    />
-
-    <input
-      type="text"
-      value={search}
-      onChange={(event) =>
-        setSearch(event.target.value)
-      }
-      placeholder="Search menu items..."
-      className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-    />
-  </div>
-
-  {search.trim() && (
-    <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xl">
-      {searchResults.length > 0 ? (
-        <div className="max-h-64 overflow-y-auto p-2">
-          {searchResults.map((item) => (
-            <Link
-              key={item.id}
-              href="/menu"
-              className="flex items-center justify-between rounded-lg px-3 py-3 transition hover:bg-orange-50 dark:hover:bg-orange-950/30"
-            >
-              <div>
-                <p className="text-sm font-medium">
-                  {item.name}
-                </p>
-
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  {item.category}
-                </p>
-              </div>
-
-              <span className="text-sm font-bold text-orange-500">
-                ₹{item.price}
-              </span>
-            </Link>
-          ))}
+          <span className="font-bold">
+            CanteenHub
+          </span>
         </div>
-      ) : (
-        <div className="p-5 text-center">
-          <p className="text-sm font-medium">
-            No menu items found
+
+        <button
+          onClick={() =>
+            setMobileMenu(!mobileMenu)
+          }
+          className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+          aria-label="Toggle menu"
+        >
+          {mobileMenu ? (
+            <X size={22} />
+          ) : (
+            <Menu size={22} />
+          )}
+        </button>
+      </header>
+
+      {/* Mobile Overlay */}
+      {mobileMenu && (
+        <div
+          onClick={() => setMobileMenu(false)}
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed left-0 top-0 z-50 h-screen w-64 border-r border-[var(--border)] bg-[var(--card)] p-5 transition-transform duration-300 lg:translate-x-0 ${
+          mobileMenu
+            ? "translate-x-0"
+            : "-translate-x-full"
+        }`}
+      >
+        {/* Brand */}
+        <div className="mb-10 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500 text-white">
+            <ChefHat size={24} />
+          </div>
+
+          <div>
+            <h1 className="font-bold">
+              CanteenHub
+            </h1>
+
+            <p className="text-xs text-[var(--muted)]">
+              Management System
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="space-y-2">
+          <NavItem
+            icon={<LayoutDashboard size={19} />}
+            label="Dashboard"
+            href="/"
+            active
+            onClick={() => setMobileMenu(false)}
+          />
+
+          <NavItem
+            icon={<Utensils size={19} />}
+            label="Menu"
+            href="/menu"
+            onClick={() => setMobileMenu(false)}
+          />
+
+          <NavItem
+            icon={<ShoppingBag size={19} />}
+            label="Orders"
+            href="/orders"
+            onClick={() => setMobileMenu(false)}
+          />
+        </nav>
+
+        <div className="my-6 border-t border-[var(--border)]" />
+
+        <NavItem
+          icon={<Settings size={19} />}
+          label="Settings"
+          href="/settings"
+          onClick={() => setMobileMenu(false)}
+        />
+
+        {/* Bottom Card */}
+        <div className="absolute bottom-5 left-5 right-5 rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
+          <div className="mb-2 h-1 w-10 rounded-full bg-orange-500" />
+
+          <p className="text-sm font-semibold">
+            CanteenHub
           </p>
 
           <p className="mt-1 text-xs text-[var(--muted)]">
-            Try another item name.
+            Simple. Fast. Delicious.
           </p>
         </div>
-      )}
-    </div>
-  )}
-</div>
+      </aside>
 
-      {/* Stats */}
-<section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Today's Orders"
-          value={totalOrders.toString()}
-          description="Orders placed today"
-          icon={<ShoppingBag size={20} />}
-          color="orange"
-        />
+      {/* Main Area */}
+      <div className="lg:ml-64">
 
-        <StatCard
-          title="Today's Sales"
-          value={`₹${totalSales}`}
-          description="From all active orders"
-          icon={<IndianRupee size={20} />}
-          color="emerald"
-        />
+        {/* Desktop Header */}
+        <header className="hidden h-16 items-center justify-between border-b border-[var(--border)] bg-[var(--card)] px-8 lg:flex">
+          <p className="text-sm text-[var(--muted)]">
+            Canteen Management
+          </p>
 
-        <StatCard
-          title="Menu Items"
-          value={availableItems.toString()}
-          description={`${menuItems.length} total items`}
-          icon={<Utensils size={20} />}
-          color="blue"
-        />
-
-        <StatCard
-          title="Pending Orders"
-          value={pendingOrders.toString()}
-          description="Needs attention"
-          icon={<Clock size={20} />}
-          color="purple"
-        />
-      </section>
-
-      {/* Main Grid */}
-      <section className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[1.5fr_1fr]">
-        {/* Recent Orders */}
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)]">
-          <div className="flex items-center justify-between border-b border-[var(--border)] p-5">
-            <div>
-              <h2 className="font-bold">
-                Recent Orders
-              </h2>
-
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                Latest orders placed in the canteen
-              </p>
-            </div>
-
-            <Link
-              href="/orders"
-              className="flex items-center gap-1 text-sm font-semibold text-orange-500 hover:text-orange-600"
+          <div className="flex items-center gap-3">
+            <button
+              className="rounded-xl p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+              aria-label="Notifications"
             >
-              View all
-              <ArrowRight size={15} />
-            </Link>
+              <Bell size={20} />
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              className="rounded-xl p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+              aria-label="Toggle theme"
+            >
+              {darkMode ? (
+                <Sun size={20} />
+              ) : (
+                <Moon size={20} />
+              )}
+            </button>
+
+            <div className="ml-2 flex items-center gap-3 border-l border-[var(--border)] pl-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 font-bold text-white">
+                A
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold">
+                  Admin
+                </p>
+
+                <p className="text-xs text-[var(--muted)]">
+                  Manager
+                </p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Mobile Controls */}
+        <div className="flex items-center justify-end border-b border-[var(--border)] bg-[var(--card)] px-4 py-3 lg:hidden">
+          <div className="flex items-center gap-2">
+            <button
+              className="rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+              aria-label="Notifications"
+            >
+              <Bell size={19} />
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              className="rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+              aria-label="Toggle theme"
+            >
+              {darkMode ? (
+                <Sun size={19} />
+              ) : (
+                <Moon size={19} />
+              )}
+            </button>
+
+            <div className="ml-1 flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 font-bold text-white">
+              A
+            </div>
+          </div>
+        </div>
+
+        {/* Dashboard */}
+        <main className="p-4 sm:p-6 lg:p-8">
+
+          {/* Welcome */}
+          <section className="mb-8">
+            <p className="mb-1 text-sm font-medium text-orange-500">
+              TODAY
+            </p>
+
+            <h2 className="text-2xl font-bold sm:text-3xl">
+              Good morning, Admin
+            </h2>
+
+            <p className="mt-2 text-[var(--muted)]">
+              Here's what's happening in your
+              canteen today.
+            </p>
+          </section>
+
+          {/* Search */}
+          <div className="mb-6 flex max-w-xl items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+            <Search
+              size={19}
+              className="text-[var(--muted)]"
+            />
+
+            <input
+              type="text"
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              placeholder="Search menu items..."
+              className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+            />
           </div>
 
-          {recentOrders.length > 0 ? (
-            <div className="divide-y divide-[var(--border)]">
-              {recentOrders.map((order) => (
-                <RecentOrder
-                  key={order.id}
-                  order={order}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex min-h-56 flex-col items-center justify-center p-6 text-center">
-              <ShoppingBag
-                size={36}
-                className="mb-3 text-[var(--muted)]"
-              />
+          {/* Stats */}
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              title="Today's Orders"
+              value={totalOrders.toString()}
+              change="Today's orders"
+              icon="🛍️"
+            />
 
-              <h3 className="font-semibold">
-                No orders yet
-              </h3>
+            <StatCard
+              title="Today's Sales"
+              value={`₹${totalSales.toLocaleString("en-IN")}`}
+              change="Completed sales"
+              icon="💰"
+            />
 
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                Orders placed from the menu will
-                appear here.
-              </p>
+            <StatCard
+              title="Menu Items"
+              value={availableItems.toString()}
+              change={`${menuItems.length} total items`}
+              icon="🍔"
+            />
+
+            <StatCard
+              title="Pending Orders"
+              value={pendingOrders.toString()}
+              change={
+                pendingOrders > 0
+                  ? "Needs attention"
+                  : "All caught up"
+              }
+              icon="⏳"
+            />
+          </section>
+
+          {/* Popular Items */}
+          <section className="mt-8">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold">
+                  Popular Today
+                </h3>
+
+                <p className="text-sm text-[var(--muted)]">
+                  Your most ordered food items
+                </p>
+              </div>
 
               <Link
                 href="/menu"
-                className="mt-4 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600"
+                className="text-sm font-semibold text-orange-500 hover:text-orange-600"
               >
-                Create Order
+                View menu →
               </Link>
             </div>
-          )}
-        </div>
 
-        {/* Quick Overview */}
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
-          <div className="mb-6">
-            <h2 className="font-bold">
-              Canteen Overview
-            </h2>
+            {filteredPopularItems.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {filteredPopularItems.map(
+                  (item) => (
+                    <FoodCard
+                      key={item.id}
+                      emoji="🍴"
+                      name={item.name}
+                      category={item.category}
+                      price={`₹${item.price}`}
+                      orders={`${item.orderCount} orders`}
+                    />
+                  )
+                )}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8 text-center">
+                <p className="font-semibold">
+                  No items found
+                </p>
 
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              Current status of your canteen.
-            </p>
-          </div>
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  Try another search or add menu
+                  items.
+                </p>
+              </div>
+            )}
+          </section>
 
-          <div className="space-y-4">
-            <OverviewRow
-              icon={<Utensils size={18} />}
-              label="Total Menu Items"
-              value={menuItems.length}
-              color="orange"
-            />
-
-            <OverviewRow
-              icon={<CheckCircle2 size={18} />}
-              label="Available Items"
-              value={availableItems}
-              color="emerald"
-            />
-
-            <OverviewRow
-              icon={<ChefHat size={18} />}
-              label="Preparing Orders"
-              value={
-                orders.filter(
-                  (order) =>
-                    order.status === "Preparing"
-                ).length
-              }
-              color="blue"
-            />
-
-            <OverviewRow
-              icon={<PackageCheck size={18} />}
-              label="Ready Orders"
-              value={
-                orders.filter(
-                  (order) =>
-                    order.status === "Ready"
-                ).length
-              }
-              color="purple"
-            />
-          </div>
-
-          <Link
-            href="/menu"
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold transition hover:border-orange-500 hover:text-orange-500"
-          >
-            Manage Menu
-            <ArrowRight size={16} />
-          </Link>
-        </div>
-      </section>
-
-      {/* Quick Actions button*/}
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Link
-          href="/menu"
-          className="group rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg"
-        >
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orange-500 dark:bg-orange-950/40">
-            <Utensils size={21} />
-          </div>
-
-          <h3 className="font-bold">
-            Manage Menu
-          </h3>
-
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            Add items, update prices and manage
-            availability.
-          </p>
-
-          <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-orange-500">
-            Open Menu
-            <ArrowRight
-              size={15}
-              className="transition group-hover:translate-x-1"
-            />
-          </div>
-        </Link>
-
-        <Link
-          href="/orders"
-          className="group rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg"
-        >
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-500 dark:bg-blue-950/40">
-            <ShoppingBag size={21} />
-          </div>
-
-          <h3 className="font-bold">
-            Manage Orders
-          </h3>
-
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            Track orders and update their status.
-          </p>
-
-          <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-orange-500">
-            Open Orders
-            <ArrowRight
-              size={15}
-              className="transition group-hover:translate-x-1"
-            />
-          </div>
-        </Link>
-      </section>
-    </main>
+        </main>
+      </div>
+    </div>
   );
 }
 
-/*
- * Stat Card
- */
+function NavItem({
+  icon,
+  label,
+  href,
+  active = false,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  href: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+        active
+          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+          : "text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800"
+      }`}
+    >
+      {icon}
+      {label}
+    </Link>
+  );
+}
 
 function StatCard({
   title,
   value,
-  description,
+  change,
   icon,
-  color,
 }: {
   title: string;
   value: string;
-  description: string;
-  icon: React.ReactNode;
-  color:
-    | "orange"
-    | "emerald"
-    | "blue"
-    | "purple";
+  change: string;
+  icon: string;
 }) {
-  const colors = {
-    orange:
-      "bg-orange-50 text-orange-500 dark:bg-orange-950/40",
-    emerald:
-      "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40",
-    blue:
-      "bg-blue-50 text-blue-500 dark:bg-blue-950/40",
-    purple:
-      "bg-purple-50 text-purple-500 dark:bg-purple-950/40",
-  };
-
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 transition hover:-translate-y-0.5 hover:shadow-lg">
-      <div className="flex items-center justify-between">
+      <div className="mb-5 flex items-center justify-between">
         <p className="text-sm text-[var(--muted)]">
           {title}
         </p>
 
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl ${colors[color]}`}
-        >
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-lg dark:bg-orange-950/40">
           {icon}
         </div>
       </div>
 
-      <p className="mt-4 text-2xl font-bold">
+      <p className="text-2xl font-bold">
         {value}
       </p>
 
-      <p className="mt-1 text-xs text-[var(--muted)]">
-        {description}
+      <p className="mt-2 text-xs text-emerald-500">
+        {change}
       </p>
     </div>
   );
 }
 
-/*
- * Recent Order
- */
-
-function RecentOrder({
-  order,
+function FoodCard({
+  emoji,
+  name,
+  category,
+  price,
+  orders,
 }: {
-  order: Order;
+  emoji: string;
+  name: string;
+  category: string;
+  price: string;
+  orders: string;
 }) {
   return (
-    <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-500 dark:bg-orange-950/40">
-          <ShoppingBag size={18} />
-        </div>
-
-        <div>
-          <p className="text-sm font-semibold">
-            {order.id}
-          </p>
-
-          <p className="mt-1 text-xs text-[var(--muted)]">
-            {order.customer} · {order.time}
-          </p>
-        </div>
+    <div className="group overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] transition hover:-translate-y-1 hover:shadow-xl">
+      <div className="flex h-32 items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 text-6xl dark:from-orange-950/40 dark:to-amber-950/30">
+        {emoji}
       </div>
 
-      <div className="flex items-center justify-between gap-4 sm:justify-end">
-        <OrderStatus status={order.status} />
+      <div className="p-5">
+        <div className="mb-2 flex items-start justify-between gap-3">
+          <div>
+            <h4 className="font-bold">
+              {name}
+            </h4>
 
-        <p className="font-bold text-orange-500">
-          ₹{order.total}
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              {category}
+            </p>
+          </div>
+
+          <span className="font-bold text-orange-500">
+            {price}
+          </span>
+        </div>
+
+        <p className="text-xs text-[var(--muted)]">
+          {orders}
         </p>
       </div>
-    </div>
-  );
-}
-
-/*
- * Status
- */
-
-function OrderStatus({
-  status,
-}: {
-  status: Order["status"];
-}) {
-  const styles: Record<
-    Order["status"],
-    string
-  > = {
-    Pending:
-      "bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400",
-    Preparing:
-      "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400",
-    Ready:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
-    Completed:
-      "bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400",
-    Cancelled:
-      "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",
-  };
-
-  return (
-    <span
-      className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${styles[status]}`}
-    >
-      {status}
-    </span>
-  );
-}
-
-/*
- * Overview Row
- */
-
-function OverviewRow({
-  icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  color:
-    | "orange"
-    | "emerald"
-    | "blue"
-    | "purple";
-}) {
-  const colors = {
-    orange:
-      "bg-orange-50 text-orange-500 dark:bg-orange-950/40",
-    emerald:
-      "bg-emerald-50 text-emerald-500 dark:bg-emerald-950/40",
-    blue:
-      "bg-blue-50 text-blue-500 dark:bg-blue-950/40",
-    purple:
-      "bg-purple-50 text-purple-500 dark:bg-purple-950/40",
-  };
-
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-[var(--border)] p-3">
-      <div className="flex items-center gap-3">
-        <div
-          className={`flex h-9 w-9 items-center justify-center rounded-lg ${colors[color]}`}
-        >
-          {icon}
-        </div>
-
-        <span className="text-sm font-medium">
-          {label}
-        </span>
-      </div>
-
-      <span className="font-bold">
-        {value}
-      </span>
     </div>
   );
 }
