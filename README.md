@@ -6,7 +6,7 @@ CanteenHub is designed to simplify everyday canteen operations by providing a ce
 
 The application provides an intuitive dashboard that allows administrators to manage their canteen activities efficiently without relying on manual record-keeping.
 
--
+--------------------------------------------------------------------------------------------------------
 
 📌 Table of Contents
 
@@ -28,7 +28,7 @@ The application provides an intuitive dashboard that allows administrators to ma
 - "Contributing" (#-contributing)
 - "License" (#-license)
 
--
+--------------------------------------------------------------------------------------------------------
 
 🚀 Overview
 
@@ -48,7 +48,7 @@ CanteenHub addresses these challenges through a centralized dashboard where admi
 
 The application focuses on simplicity, accessibility, and efficient management.
 
--
+---------------------------------------------------------------------------------------
 
 🎯 Why CanteenHub?
 
@@ -65,7 +65,7 @@ Manual sales tracking| Dashboard-based sales statistics
 Poor organization| Centralized management interface
 Limited accessibility| Responsive web application
 
--
+-------------------
 
 ✨ Key Features
 
